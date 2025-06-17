@@ -7,6 +7,8 @@ export default function Portfolio() {
   const [active, setActive] = useState('home');
   const [showTop, setShowTop] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
+  const [user, setUser] = useState(null);
+  const [repos, setRepos] = useState([]);
 
   const sections = ['home','about','projects','skills','contact'];
 
@@ -23,6 +25,26 @@ export default function Portfolio() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    async function fetchGithub() {
+      try {
+        const userRes = await fetch('https://api.github.com/users/Nico3246');
+        if (userRes.ok) {
+          const data = await userRes.json();
+          setUser(data);
+        }
+        const repoRes = await fetch('https://api.github.com/users/Nico3246/repos?sort=updated&per_page=6');
+        if (repoRes.ok) {
+          const data = await repoRes.json();
+          setRepos(data);
+        }
+      } catch (err) {
+        console.error('GitHub fetch failed', err);
+      }
+    }
+    fetchGithub();
   }, []);
 
   const toggleTheme = () => setDarkMode(!darkMode);
@@ -78,8 +100,8 @@ export default function Portfolio() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">Hola, soy <span className="text-primary">Nicolás Sánchez</span></h1>
-              <p className="text-xl md:text-2xl text-gray-600 mb-8">Desarrollador de Software</p>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">Hola, soy <span className="text-primary">{user?.name || 'Nicolás Sánchez'}</span></h1>
+              <p className="text-xl md:text-2xl text-gray-600 mb-8">{user?.bio || 'Desarrollador de Software'}</p>
               <div className="flex flex-wrap gap-4">
                 <a href="#projects" className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-secondary transition-colors duration-300 shadow-md">Ver proyectos</a>
                 <a href="#contact" className="px-6 py-3 bg-white text-primary font-medium rounded-lg border border-primary hover:bg-gray-50 transition-colors duration-300">Contactar</a>
@@ -99,9 +121,13 @@ export default function Portfolio() {
             <div className="md:w-1/2 flex justify-center mt-4 md:mt-0">
               <div className="relative">
                 <div className="w-64 h-64 md:w-80 md:h-80 rounded-full bg-primary bg-opacity-10 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
-                  <svg className="w-40 h-40 text-primary" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
-                  </svg>
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg className="w-40 h-40 text-primary" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
+                    </svg>
+                  )}
                 </div>
                 <div className="absolute -bottom-4 -right-4 bg-white rounded-full p-4 shadow-lg">
                   <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -164,97 +190,30 @@ export default function Portfolio() {
           <h2 className="text-3xl font-bold mb-2 text-center">Mis Proyectos</h2>
           <p className="text-gray-600 mb-12 text-center max-w-2xl mx-auto">Una selección de mis trabajos más recientes y destacados</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Project cards simplified */}
-            <div className="project-card bg-white rounded-xl overflow-hidden shadow-md">
-              <div className="h-48 bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-xl">Proyecto React</h3>
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">React</span>
+            {repos.map(repo => (
+              <div key={repo.id} className="project-card bg-white rounded-xl overflow-hidden shadow-md">
+                <div className="h-48 bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
+                  <FaGithub className="w-16 h-16 text-white" />
                 </div>
-                <p className="text-gray-600 mb-4">Una aplicación web desarrollada con React que implementa funcionalidades modernas y una interfaz de usuario intuitiva.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">React</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">JavaScript</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">CSS</span>
-                </div>
-                <div className="flex justify-between">
-                  <a href="#" className="text-primary hover:text-secondary font-medium flex items-center">
-                    <span>Ver demo</span>
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                  </a>
-                  <a href="https://github.com/Nico3246" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900">
-                    <FaGithub className="text-xl" />
-                  </a>
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-xl">{repo.name}</h3>
+                    {repo.language && (
+                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">{repo.language}</span>
+                    )}
+                  </div>
+                  {repo.description && <p className="text-gray-600 mb-4">{repo.description}</p>}
+                  <div className="flex justify-between">
+                    <a href={repo.html_url} target="_blank" rel="noreferrer" className="text-primary hover:text-secondary font-medium flex items-center">
+                      <span>Ver repo</span>
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="project-card bg-white rounded-xl overflow-hidden shadow-md">
-              <div className="h-48 bg-gradient-to-r from-green-400 to-teal-500 flex items-center justify-center">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-xl">App Móvil</h3>
-                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Mobile</span>
-                </div>
-                <p className="text-gray-600 mb-4">Una aplicación móvil desarrollada con React Native que ofrece una experiencia fluida y funcionalidades avanzadas.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">React Native</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">JavaScript</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Firebase</span>
-                </div>
-                <div className="flex justify-between">
-                  <a href="#" className="text-primary hover:text-secondary font-medium flex items-center">
-                    <span>Ver demo</span>
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                  </a>
-                  <a href="https://github.com/Nico3246" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900">
-                    <FaGithub className="text-xl" />
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="project-card bg-white rounded-xl overflow-hidden shadow-md">
-              <div className="h-48 bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
-                </svg>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-xl">API Backend</h3>
-                  <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">Backend</span>
-                </div>
-                <p className="text-gray-600 mb-4">Una API RESTful desarrollada con Node.js y Express que proporciona servicios eficientes y seguros.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Node.js</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Express</span>
-                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">MongoDB</span>
-                </div>
-                <div className="flex justify-between">
-                  <a href="#" className="text-primary hover:text-secondary font-medium flex items-center">
-                    <span>Ver documentación</span>
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                  </a>
-                  <a href="https://github.com/Nico3246" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900">
-                    <FaGithub className="text-xl" />
-                  </a>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
           <div className="text-center mt-12">
             <a href="https://github.com/Nico3246" target="_blank" rel="noreferrer" className="inline-flex items-center px-6 py-3 bg-white text-primary font-medium rounded-lg border border-primary hover:bg-gray-50 transition-colors duration-300">
